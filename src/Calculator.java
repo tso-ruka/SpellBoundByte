@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -24,7 +26,7 @@ public class Calculator {
         "0", ".", "√", "=", 
     };
 
-    String [] rightSymbols = {"+" , "×" , "-" , "+", "="};
+    String [] rightSymbols = {"+" , "×" , "-" , "÷", "="};
     String [] topSymbols = {"AC" , "+/-" , "%" };
 
     JFrame frame = new JFrame("Calculator");
@@ -32,9 +34,16 @@ public class Calculator {
     JPanel displayPanel = new JPanel();
     JPanel buttonsPanel = new JPanel();
 
+    //varibles for calculations A+B, A-B, A*B, A/B
+    String A = "0"; 
+    String operator = null;
+    String B = null;
+
+
+    @SuppressWarnings("Convert2Lambda")
     Calculator(){
         //window
-        frame.setVisible(true);
+        //frame.setVisible(true);
         frame.setSize(boardWidth, boardiHeight);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
@@ -80,6 +89,107 @@ public class Calculator {
 
             buttonsPanel.add(button);
 
+            //Click buttons
+            button.addActionListener(new ActionListener() {
+                @Override
+                @SuppressWarnings("StringEquality")
+                public void actionPerformed(ActionEvent e) {
+                    JButton button = (JButton) e.getSource();
+                    //identify the button clicked
+                    String buttonValue = button.getText();
+                    if (Arrays.asList(rightSymbols).contains(buttonValue)){
+                        if (buttonValue == "="){
+                            if (A != null){
+                                B = displayLabel.getText();
+                                double numA = Double.parseDouble(A);
+                                double numB = Double.parseDouble(B);
+
+                                if (operator == "+"){
+                                    displayLabel.setText(removeZeroDecimal(numA+numB));
+                                } else if (operator == "-"){
+                                    displayLabel.setText(removeZeroDecimal(numA-numB));
+                                } else if (operator == "×") {
+                                    displayLabel.setText(removeZeroDecimal(numA*numB));
+                                } else if (operator == "÷") {
+                                    displayLabel.setText(removeZeroDecimal(numA/numB));
+                                }
+                                clearAll();
+
+                            }
+                        } else if ("+-×÷".contains(buttonValue)) {
+                            if (operator == null) {
+                                A = displayLabel.getText();
+                                displayLabel.setText("0");
+                                B = "0";
+                            }
+                            operator = buttonValue;
+                        }
+
+                    } else if (Arrays.asList(topSymbols).contains(buttonValue)) {
+                        if (null != buttonValue)switch (buttonValue) {
+                            case "AC":
+                                clearAll();
+                                displayLabel.setText("0");
+                                break;
+                            case "+/-":{
+                                double numDisplay = Double.parseDouble(displayLabel.getText());
+                                numDisplay *= -1;
+                                // 584 >> -584.0
+                                //displayLabel.setText(Double.toString(numDisplay));
+                                displayLabel.setText(removeZeroDecimal(numDisplay));
+                                    break;
+                                }
+                            case "%":{
+                                double numDisplay = Double.parseDouble(displayLabel.getText());
+                                numDisplay /= 100;
+                                displayLabel.setText(removeZeroDecimal(numDisplay));
+                                    break;
+                                }
+                            default:
+                                break;
+                        }
+
+                    } else /*digits or . */ {
+                        if (buttonValue == "."){
+                            if (!displayLabel.getText().contains(buttonValue)){
+                                 displayLabel.setText(displayLabel.getText() + buttonValue);
+                            }
+
+                        } else if ("0123456789".contains(buttonValue)) {
+                            if (displayLabel.getText() == "0"){
+                                displayLabel.setText(buttonValue);
+                            } else {
+                                displayLabel.setText(displayLabel.getText() + buttonValue);
+                            } 
+                        } else if (buttonValue == "√") {
+                            if (displayLabel.getText() == "0"){
+                                displayLabel.setText("0");
+                            } else {
+                                //calcola la radice quadrata del numero 
+                                double numDisplay = Double.parseDouble(displayLabel.getText());
+                                numDisplay = Math.pow(numDisplay, 0.5);
+                                displayLabel.setText(removeZeroDecimal(numDisplay));
+                            }
+                        }
+                    }
+                }
+
+            });
+            frame.setVisible(true);
         }
+    }
+
+    void clearAll() {
+        A = "0";
+        operator = null; 
+        B = null;
+    }
+
+    String removeZeroDecimal(double numDisplay) {
+        if (numDisplay % 1 == 0) {
+            //whole number
+            return Integer.toString((int) numDisplay);
+        }
+        return Double.toString(numDisplay);
     }
 }
